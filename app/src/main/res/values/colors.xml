@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#1976d2</color>
+    <color name="colorPrimaryDark">#145ea8</color>
+    <color name="colorAccent">#d8a91b</color>
+
+    <color name="colorFacebook">#3c5b9b</color>
+    <color name="colorGoogle">#f63e28</color>
+    <color name="colorTwitter">#2daae1</color>
+
+    <color name="colorButton">#f29945</color>
+    <color name="colorButtonPressed">#f26a45</color>
+
+    <color name="colorFieldSignIn">#dedbe1</color>
+    <color name="colorNavigationDrawer">#1D6BC3</color>
+    <color name="colorBackground">#a4a3a2</color>
+
+</resources>

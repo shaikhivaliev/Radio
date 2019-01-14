@@ -1,0 +1,369 @@
+[
+  {
+    "id": "1",
+    "title": "Rock",
+    "description": "simple rock. from elvis to metallica and like hardrock as iron maiden.",
+    "slug": "rock",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 18,
+        "title": "Classic Rock"
+      },
+      {
+        "id": 8,
+        "title": "Hard Rock"
+      },
+      {
+        "id": 39,
+        "title": "Light Rock"
+      },
+      {
+        "id": 19,
+        "title": "Modern Rock"
+      },
+      {
+        "id": 16,
+        "title": "Normal Rock"
+      },
+      {
+        "id": 59,
+        "title": "Progressive Rock"
+      },
+      {
+        "id": 33,
+        "title": "Singer \u0026 Songwriter"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "title": "Pop",
+    "description": "stations that normally play pop-music",
+    "slug": "pop",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 58,
+        "title": "Bubblegum Pop"
+      },
+      {
+        "id": 32,
+        "title": "JPOP"
+      },
+      {
+        "id": 57,
+        "title": "KPop"
+      },
+      {
+        "id": 22,
+        "title": "Schlager"
+      },
+      {
+        "id": 17,
+        "title": "Top 40"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "title": "Electronic",
+    "description": "all computeriz made.",
+    "slug": "electronic",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 69,
+        "title": "Ambient"
+      },
+      {
+        "id": 70,
+        "title": "Chillstep"
+      },
+      {
+        "id": 3,
+        "title": "Dance"
+      },
+      {
+        "id": 73,
+        "title": "Dubstep"
+      },
+      {
+        "id": 6,
+        "title": "Harddance"
+      },
+      {
+        "id": 15,
+        "title": "Hardstyle"
+      },
+      {
+        "id": 23,
+        "title": "House"
+      },
+      {
+        "id": 1,
+        "title": "Trance"
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "title": "Jazz",
+    "description": "The classical music - Jazz.",
+    "slug": "jazz",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 25,
+        "title": "Mainstream Jazz"
+      }
+    ]
+  },
+  {
+    "id": "5",
+    "title": "Rap",
+    "description": "50 Cent and more.",
+    "slug": "rap",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 20,
+        "title": "Hip Hop"
+      }
+    ]
+  },
+  {
+    "id": "6",
+    "title": "Classical",
+    "description": "Classical music such as Mozart and Beethoven but also Greig and others.",
+    "slug": "classical",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 24,
+        "title": "Baroque"
+      },
+      {
+        "id": 26,
+        "title": "Classical period music"
+      }
+    ]
+  },
+  {
+    "id": "7",
+    "title": "Reggae",
+    "description": "Who don't know Bob Marley?",
+    "slug": "reggae",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 29,
+        "title": "Classic reggae"
+      },
+      {
+        "id": 60,
+        "title": "Dancehall"
+      },
+      {
+        "id": 28,
+        "title": "Lovers rock"
+      },
+      {
+        "id": 27,
+        "title": "Roots Reggae"
+      }
+    ]
+  },
+  {
+    "id": "8",
+    "title": "Folk",
+    "description": "",
+    "slug": "folk",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 47,
+        "title": "Electronic Folk"
+      },
+      {
+        "id": 48,
+        "title": "Folk Rock"
+      }
+    ]
+  },
+  {
+    "id": "9",
+    "title": "Country",
+    "description": "",
+    "slug": "country",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 50,
+        "title": "Bluegrass"
+      },
+      {
+        "id": 51,
+        "title": "Classic Country"
+      }
+    ]
+  },
+  {
+    "id": "10",
+    "title": "R\u0026B/Urban",
+    "description": "",
+    "slug": "r-b-urban",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 35,
+        "title": "Classic R\u0026B"
+      },
+      {
+        "id": 37,
+        "title": "Funk"
+      },
+      {
+        "id": 36,
+        "title": "Motown"
+      },
+      {
+        "id": 38,
+        "title": "Soul"
+      }
+    ]
+  },
+  {
+    "id": "11",
+    "title": "International",
+    "description": "",
+    "slug": "international",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 64,
+        "title": "African"
+      },
+      {
+        "id": 65,
+        "title": "Bollywood"
+      },
+      {
+        "id": 67,
+        "title": "Chinese"
+      },
+      {
+        "id": 68,
+        "title": "Hebrew"
+      },
+      {
+        "id": 63,
+        "title": "Hindi"
+      },
+      {
+        "id": 66,
+        "title": "Islamic"
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "title": "Decades",
+    "description": "",
+    "slug": "decades",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 56,
+        "title": "40s"
+      },
+      {
+        "id": 55,
+        "title": "50s"
+      },
+      {
+        "id": 54,
+        "title": "60s"
+      },
+      {
+        "id": 43,
+        "title": "70s"
+      },
+      {
+        "id": 41,
+        "title": "80s"
+      },
+      {
+        "id": 42,
+        "title": "90s"
+      }
+    ]
+  },
+  {
+    "id": "13",
+    "title": "Talk \u0026 Speech",
+    "description": "talk \u0026 speech stations like normal talkshows and religous discuss.",
+    "slug": "talk-speech",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 31,
+        "title": "Conspiracy"
+      },
+      {
+        "id": 21,
+        "title": "News"
+      },
+      {
+        "id": 30,
+        "title": "Politic"
+      },
+      {
+        "id": 61,
+        "title": "Religion"
+      },
+      {
+        "id": 74,
+        "title": "Sports"
+      }
+    ]
+  },
+  {
+    "id": "14",
+    "title": "Adult Contemporary",
+    "description": "",
+    "slug": "adult-contemporary",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 76,
+        "title": "Easy Listening"
+      },
+      {
+        "id": 72,
+        "title": "Hot Adult Contemporary"
+      }
+    ]
+  },
+  {
+    "id": "15",
+    "title": "Misc",
+    "description": "Everything else.",
+    "slug": "misc",
+    "ancestry": null,
+    "children": [
+      {
+        "id": 75,
+        "title": "College"
+      },
+      {
+        "id": 52,
+        "title": "Oldies"
+      },
+      {
+        "id": 45,
+        "title": "Variety"
+      }
+    ]
+  }
+]
