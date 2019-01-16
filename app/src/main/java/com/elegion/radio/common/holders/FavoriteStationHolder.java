@@ -30,7 +30,7 @@ public class FavoriteStationHolder extends RecyclerView.ViewHolder {
             mLabelStation.setImageResource(R.drawable.radio);
 
         } else {
-            Picasso.with(mLabelStation.getContext())
+            Picasso.get()
                     .load(favoriteStation.getUrl())
                     .into(mLabelStation);
         }

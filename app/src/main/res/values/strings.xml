@@ -106,6 +106,10 @@
     <string name="countries">Countries</string>
     <string name="styles">Styles</string>
     <string name="favorites">Favorites</string>
+    <string name="pause">Pause</string>
+    <string name="play">Play</string>
+    <string name="prev">Previous</string>
+    <string name="next">next</string>
 
 
 </resources>

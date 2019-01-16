@@ -1,6 +1,8 @@
 package com.elegion.radio.ui.main.fragments;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +24,7 @@ import com.elegion.radio.common.RecyclerViewAdapter;
 import com.elegion.radio.database.AppDatabase;
 import com.elegion.radio.database.RecentStation;
 import com.elegion.radio.database.StationDao;
+import com.elegion.radio.ui.player.PlayerActivity;
 import com.elegion.radio.ui.player.PlayerFragment;
 
 import java.util.ArrayList;
@@ -65,10 +68,11 @@ public class RecentlyFragment extends Fragment implements
             //todo гененрировать случайный id, обработать ситуацию когда такого id нет
             int id = 727;
 
+            Intent intent = new Intent(getActivity(), PlayerActivity.class);
             Bundle args = new Bundle();
             args.putString(PlayerFragment.STATION_KEY, String.valueOf(id));
-
-            ((ContainerActivity) getActivity()).changeFragment(PlayerFragment.newInstance(args));
+            intent.putExtra(PlayerActivity.STATION_KEY, args);
+            startActivity(intent);
 
         });
 
@@ -113,10 +117,13 @@ public class RecentlyFragment extends Fragment implements
 
     @Override
     public void onItemClick(String id) {
+
+        Intent intent = new Intent(getActivity(), PlayerActivity.class);
         Bundle args = new Bundle();
         args.putString(PlayerFragment.STATION_KEY, id);
+        intent.putExtra(PlayerActivity.STATION_KEY, args);
+        startActivity(intent);
 
-        ((ContainerActivity) getActivity()).changeFragment(PlayerFragment.newInstance(args));
 
     }
 

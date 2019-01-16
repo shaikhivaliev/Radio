@@ -1,20 +1,23 @@
 package com.elegion.radio.ui.player;
 
 import android.annotation.SuppressLint;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,23 +27,18 @@ import com.elegion.radio.database.AppDatabase;
 import com.elegion.radio.database.FavoriteStation;
 import com.elegion.radio.database.RecentStation;
 import com.elegion.radio.database.StationDao;
-import com.elegion.radio.model.Station;
 import com.elegion.radio.utils.ApiUtils;
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
-import java.util.List;
-
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
+import static android.content.Context.BIND_AUTO_CREATE;
 
-public class PlayerFragment extends Fragment implements
-        MediaPlayer.OnPreparedListener {
+
+public class PlayerFragment extends Fragment {
 
     public static final String STATION_KEY = "STATION_KEY";
 
@@ -57,10 +55,17 @@ public class PlayerFragment extends Fragment implements
     private String mUrl;
     private String mStyle;
 
-    private MediaPlayer mMediaPlayer;
     private ImageButton mPlayStopButton;
     private ProgressBar mProgressBar;
-    private SeekBar mSeekbarVolume;
+
+    private PlayerService.PlayerServiceBinder mPlayerServiceBinder;
+
+    //через этот класс передаем команды в сервис
+    private MediaControllerCompat mMediaController;
+    //...и отрабатываем изменения и команды от сервиса
+    private MediaControllerCompat.Callback mCallback;
+
+    private ServiceConnection mServiceConnection;
 
     public static PlayerFragment newInstance(Bundle args) {
         PlayerFragment fragment = new PlayerFragment();
@@ -84,7 +89,52 @@ public class PlayerFragment extends Fragment implements
 
         isAddedInDatabase();
 
+        mCallback = new MediaControllerCompat.Callback() {
+            @Override
+            public void onPlaybackStateChanged(PlaybackStateCompat state) {
+
+                if (state == null)
+                    return;
+
+                boolean playing = state.getState() == PlaybackStateCompat.STATE_PLAYING;
+
+                if (playing) {
+                    mPlayStopButton.setImageResource(R.drawable.ic_pause);
+                    mPlayStopButton.setOnClickListener(pauseButtonListener);
+                } else {
+                    mPlayStopButton.setImageResource(R.drawable.ic_play);
+                    mPlayStopButton.setOnClickListener(playButtonListener);
+                }
+            }
+        };
+
+        mServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                mPlayerServiceBinder = (PlayerService.PlayerServiceBinder) service;
+                try {
+                    mMediaController = new MediaControllerCompat(getActivity(), mPlayerServiceBinder.getMediaSessionToken());
+                    mMediaController.registerCallback(mCallback);
+                    mCallback.onPlaybackStateChanged(mMediaController.getPlaybackState());
+                } catch (RemoteException e) {
+                    mMediaController = null;
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                mPlayerServiceBinder = null;
+                if (mMediaController != null) {
+                    mMediaController.unregisterCallback(mCallback);
+                    mMediaController = null;
+                }
+            }
+        };
+
+        getActivity().bindService(new Intent(getContext(), PlayerService.class), mServiceConnection, BIND_AUTO_CREATE);
+
     }
+
 
     @Nullable
     @Override
@@ -108,24 +158,25 @@ public class PlayerFragment extends Fragment implements
         mPlayStopButton.setOnClickListener(playButtonListener);
         mProgressBar = v.findViewById(R.id.pb_audio_buffer);
 
-        mSeekbarVolume = v.findViewById(R.id.seekBar);
-
-        mSeekbarVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-//                setProperty(null, "volume", seekBar.getProgress());
-//                showProperty("volume", null, "%");
-            }
-        });
     }
+
+    /*------------------Player--------------*/
+
+    View.OnClickListener playButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (mMediaController != null)
+                mMediaController.getTransportControls().play();
+        }
+    };
+
+    View.OnClickListener pauseButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (mMediaController != null)
+                mMediaController.getTransportControls().pause();
+        }
+    };
 
 
     @SuppressLint("CheckResult")
@@ -134,34 +185,23 @@ public class PlayerFragment extends Fragment implements
                 .getStationById(String.valueOf(mStationId))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doFinally(new Action() {
-                    @Override
-                    public void run() throws Exception {
-                        addToRecent();
+                .doFinally(() -> addToRecent())
+                .subscribe(response -> {
+                    mStyle = response.getCategoriesBean().get(0).getTitle();
+                    mUrl = response.getImage().getUrl();
+                    if (mUrl != null) {
+                        Picasso.get()
+                                .load(mUrl)
+                                .into(mStationLabel);
+                    } else {
+                        mStationLabel.setImageResource(R.drawable.radio);
                     }
-                })
-                .subscribe(new Consumer<Station>() {
-                    @Override
-                    public void accept(Station response) throws Exception {
-                        mStyle = response.getCategoriesBean().get(0).getTitle();
-                        mUrl = response.getImage().getUrl();
-                        if (mUrl != null) {
-                            Picasso.with(mStationLabel.getContext())
-                                    .load(mUrl)
-                                    .into(mStationLabel);
-                        } else {
-                            mStationLabel.setImageResource(R.drawable.radio);
-                        }
-                        mStationName.setText(response.getName());
-                        mStreamResource = response.getStreamBeans().get(0).getStreamResource();
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-                        mErrorView.setVisibility(View.VISIBLE);
-                        mPlayerView.setVisibility(View.GONE);
+                    mStationName.setText(response.getName());
+                    mStreamResource = response.getStreamBeans().get(0).getStreamResource();
+                }, throwable -> {
+                    mErrorView.setVisibility(View.VISIBLE);
+                    mPlayerView.setVisibility(View.GONE);
 
-                    }
                 });
     }
 
@@ -174,48 +214,38 @@ public class PlayerFragment extends Fragment implements
         mStationDao.getRecentlyStations()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<List<RecentStation>>() {
-                    @Override
-                    public void accept(List<RecentStation> recentlyStations) throws Exception {
-                        int isAlreadyInRecently = 0;
+                .subscribe(recentlyStations -> {
+                    int isAlreadyInRecently = 0;
 
-                        for (RecentStation station : recentlyStations) {
-                            if (station.getStationId() == Integer.valueOf(mStationId)) {
-                                isAlreadyInRecently++;
-                            }
+                    for (RecentStation station : recentlyStations) {
+                        if (station.getStationId() == Integer.valueOf(mStationId)) {
+                            isAlreadyInRecently++;
                         }
-
-                        if (isAlreadyInRecently > 0) {
-                            return;
-                        } else if (recentlyStations.size() < 4) {
-                            insertStation();
-                        } else updateStation();
                     }
 
+                    if (isAlreadyInRecently > 0) {
+                        return;
+                    } else if (recentlyStations.size() < 4) {
+                        insertStation();
+                    } else updateStation();
                 });
     }
 
     private void updateStation() {
-        Completable.fromAction(new Action() {
-            @Override
-            public void run() throws Exception {
-                mStationDao.deleteStationFromRecently();
+        Completable.fromAction(() -> {
+            mStationDao.deleteStationFromRecently();
 
-                RecentStation rs = new RecentStation(0, Integer.valueOf(mStationId), mStationName.getText().toString(), mUrl, mStyle);
-                mStationDao.insertStationToRecently(rs);
-            }
+            RecentStation rs = new RecentStation(0, Integer.valueOf(mStationId), mStationName.getText().toString(), mUrl, mStyle);
+            mStationDao.insertStationToRecently(rs);
         })
                 .subscribeOn(Schedulers.io())
                 .subscribe();
     }
 
     private void insertStation() {
-        Completable.fromAction(new Action() {
-            @Override
-            public void run() throws Exception {
-                RecentStation rs = new RecentStation(0, Integer.valueOf(mStationId), mStationName.getText().toString(), mUrl, mStyle);
-                mStationDao.insertStationToRecently(rs);
-            }
+        Completable.fromAction(() -> {
+            RecentStation rs = new RecentStation(0, Integer.valueOf(mStationId), mStationName.getText().toString(), mUrl, mStyle);
+            mStationDao.insertStationToRecently(rs);
         })
                 .subscribeOn(Schedulers.io())
                 .subscribe();
@@ -253,12 +283,9 @@ public class PlayerFragment extends Fragment implements
             mAddToFavorites.setImageResource(R.drawable.ic_star_filling);
             mAddToFavorites.setOnClickListener(removeFromFavorites);
 
-            Completable.fromAction(new Action() {
-                @Override
-                public void run() throws Exception {
-                    FavoriteStation fs = new FavoriteStation(Integer.valueOf(mStationId), mStationName.getText().toString(), mUrl, mStyle);
-                    mStationDao.insertStationToFavorites(fs);
-                }
+            Completable.fromAction(() -> {
+                FavoriteStation fs = new FavoriteStation(Integer.valueOf(mStationId), mStationName.getText().toString(), mUrl, mStyle);
+                mStationDao.insertStationToFavorites(fs);
             })
                     .subscribeOn(Schedulers.io())
                     .subscribe();
@@ -272,12 +299,7 @@ public class PlayerFragment extends Fragment implements
             mAddToFavorites.setImageResource(R.drawable.ic_star);
             mAddToFavorites.setOnClickListener(addToFavorites);
 
-            Completable.fromAction(new Action() {
-                @Override
-                public void run() throws Exception {
-                    mStationDao.deleteStationFromFavorites(Integer.valueOf(mStationId));
-                }
-            })
+            Completable.fromAction(() -> mStationDao.deleteStationFromFavorites(Integer.valueOf(mStationId)))
                     .subscribeOn(Schedulers.io())
                     .subscribe();
 
@@ -285,76 +307,15 @@ public class PlayerFragment extends Fragment implements
     };
 
 
-
-    /*------------------Player--------------*/
-
-    View.OnClickListener playButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            playRadio();
-            mPlayStopButton.setOnClickListener(pauseButtonListener);
-        }
-    };
-
-    View.OnClickListener pauseButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            pauseRadio();
-            mPlayStopButton.setOnClickListener(playButtonListener);
-        }
-    };
-
-    private void playRadio() {
-
-        mPlayStopButton.setVisibility(View.GONE);
-        mProgressBar.setVisibility(View.VISIBLE);
-
-        mMediaPlayer = new MediaPlayer();
-
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        try {
-            mMediaPlayer.setDataSource(mStreamResource);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mMediaPlayer.setOnPreparedListener(this);
-        mMediaPlayer.prepareAsync();
-
-    }
-
-
-    private void pauseRadio() {
-
-        mPlayStopButton.setImageResource(R.drawable.ic_play);
-        mMediaPlayer.pause();
-    }
-
-    private void release() {
-        if (mMediaPlayer != null) {
-            try {
-                mMediaPlayer.release();
-                mMediaPlayer = null;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     @Override
-    public void onPrepared(MediaPlayer mp) {
-        mPlayStopButton.setVisibility(View.VISIBLE);
-        mProgressBar.setVisibility(View.GONE);
-        mPlayStopButton.setImageResource(R.drawable.ic_pause);
-        mMediaPlayer.start();
+    public void onDestroy() {
+        super.onDestroy();
+        mPlayerServiceBinder = null;
+        if (mMediaController != null) {
+            mMediaController.unregisterCallback(mCallback);
+            mMediaController = null;
+        }
+        getActivity().unbindService(mServiceConnection);
     }
-
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        release();
-    }
-
-
 }
 

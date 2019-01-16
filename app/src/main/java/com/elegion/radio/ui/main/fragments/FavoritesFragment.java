@@ -17,7 +17,6 @@ import com.elegion.radio.R;
 import com.elegion.radio.common.ContainerActivity;
 import com.elegion.radio.common.RecyclerViewAdapter;
 import com.elegion.radio.database.AppDatabase;
-import com.elegion.radio.database.FavoriteStation;
 import com.elegion.radio.database.StationDao;
 import com.elegion.radio.ui.player.PlayerFragment;
 
@@ -25,8 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class FavoritesFragment extends Fragment implements
@@ -77,34 +74,23 @@ public class FavoritesFragment extends Fragment implements
         mStationDao.getFavoritesStations()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doFinally(new Action() {
-                    @Override
-                    public void run() throws Exception {
-                        mRecyclerViewAdapter = new RecyclerViewAdapter(mSampleArrayList, FavoritesFragment.this);
-                        mRecyclerView.setAdapter(mRecyclerViewAdapter);
-                    }
+                .doFinally(() -> {
+                    mRecyclerViewAdapter = new RecyclerViewAdapter(mSampleArrayList, FavoritesFragment.this);
+                    mRecyclerView.setAdapter(mRecyclerViewAdapter);
                 })
-                .subscribe(new Consumer<List<FavoriteStation>>() {
+                .subscribe(favoriteStations -> {
 
-                    @Override
-                    public void accept(List<FavoriteStation> favoriteStations) throws Exception {
+                    if (!favoriteStations.isEmpty()) {
 
-                        if (!favoriteStations.isEmpty()) {
+                        mFavoritesMock.setVisibility(View.GONE);
+                        mRecyclerView.setVisibility(View.VISIBLE);
 
-                            mFavoritesMock.setVisibility(View.GONE);
-                            mRecyclerView.setVisibility(View.VISIBLE);
+                        mSampleArrayList.clear();
+                        mSampleArrayList.addAll(favoriteStations);
 
-                            if (mFavoritesListSize != favoriteStations.size()) {
-                                mSampleArrayList.clear();
-                                mSampleArrayList.addAll(favoriteStations);
-                            }
-
-                            mFavoritesListSize = favoriteStations.size();
-
-                        } else {
-                            mFavoritesMock.setVisibility(View.VISIBLE);
-                            mRecyclerView.setVisibility(View.GONE);
-                        }
+                    } else {
+                        mFavoritesMock.setVisibility(View.VISIBLE);
+                        mRecyclerView.setVisibility(View.GONE);
                     }
                 });
     }

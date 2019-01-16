@@ -30,7 +30,7 @@ public class RecentlyStationHolder extends RecyclerView.ViewHolder {
             mLabelStation.setImageResource(R.drawable.radio);
 
         } else {
-            Picasso.with(mLabelStation.getContext())
+            Picasso.get()
                     .load(recentStation.getUrl())
                     .into(mLabelStation);
         }
