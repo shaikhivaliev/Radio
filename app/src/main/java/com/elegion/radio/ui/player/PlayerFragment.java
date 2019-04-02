@@ -10,6 +10,7 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.LayoutInflater;
@@ -58,14 +59,17 @@ public class PlayerFragment extends Fragment {
     private ImageButton mPlayStopButton;
     private ProgressBar mProgressBar;
 
+    // 25 - общение ui - сервис
     private PlayerService.PlayerServiceBinder mPlayerServiceBinder;
 
-    //через этот класс передаем команды в сервис
+    // 22 - MediaController предоставляет как методы управления плеером play, pause, stop
     private MediaControllerCompat mMediaController;
-    //...и отрабатываем изменения и команды от сервиса
-    private MediaControllerCompat.Callback mCallback;
+    // 23 - ...так и коллбэки
+    private MediaControllerCompat.Callback mMediaCallback;
 
+    // 24 - для мониторинга состояния сервиса приложения
     private ServiceConnection mServiceConnection;
+    private PlayerService mService;
 
     public static PlayerFragment newInstance(Bundle args) {
         PlayerFragment fragment = new PlayerFragment();
@@ -89,7 +93,10 @@ public class PlayerFragment extends Fragment {
 
         isAddedInDatabase();
 
-        mCallback = new MediaControllerCompat.Callback() {
+
+
+        // 26 - через эти коллбеки получаем обновления сессии
+        mMediaCallback = new MediaControllerCompat.Callback() {
             @Override
             public void onPlaybackStateChanged(PlaybackStateCompat state) {
 
@@ -106,16 +113,30 @@ public class PlayerFragment extends Fragment {
                     mPlayStopButton.setOnClickListener(playButtonListener);
                 }
             }
+
+            @Override
+            public void onMetadataChanged(MediaMetadataCompat metadata) {
+                super.onMetadataChanged(metadata);
+            }
+
         };
 
+
+        // 27 - когда подсоединились к сервису..
         mServiceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 mPlayerServiceBinder = (PlayerService.PlayerServiceBinder) service;
                 try {
+                    // 28 - создаем экземпляр MediaController..
                     mMediaController = new MediaControllerCompat(getActivity(), mPlayerServiceBinder.getMediaSessionToken());
-                    mMediaController.registerCallback(mCallback);
-                    mCallback.onPlaybackStateChanged(mMediaController.getPlaybackState());
+                    mMediaController.registerCallback(mMediaCallback);
+                    // 29 - сетим текущий state
+                    mMediaCallback.onPlaybackStateChanged(mMediaController.getPlaybackState());
+
+                    // 32 - получаем экземпляр сервиса через binder
+                    mService = mPlayerServiceBinder.getService();
+
                 } catch (RemoteException e) {
                     mMediaController = null;
                 }
@@ -123,14 +144,18 @@ public class PlayerFragment extends Fragment {
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
+                // 30 - Система Android вызывает этот метод в случае непредвиденной потери подключения к службе,
+                // например при сбое в работе службы или в случае ее завершения.
+                // Этот метод не вызывается, когда клиент отменяет привязку.
                 mPlayerServiceBinder = null;
                 if (mMediaController != null) {
-                    mMediaController.unregisterCallback(mCallback);
+                    mMediaController.unregisterCallback(mMediaCallback);
                     mMediaController = null;
                 }
             }
         };
 
+        //31 -  запускаем сервис
         getActivity().bindService(new Intent(getContext(), PlayerService.class), mServiceConnection, BIND_AUTO_CREATE);
 
     }
@@ -198,6 +223,8 @@ public class PlayerFragment extends Fragment {
                     }
                     mStationName.setText(response.getName());
                     mStreamResource = response.getStreamBeans().get(0).getStreamResource();
+                    mService.setStreamResource(mStreamResource);
+
                 }, throwable -> {
                     mErrorView.setVisibility(View.VISIBLE);
                     mPlayerView.setVisibility(View.GONE);
@@ -312,7 +339,7 @@ public class PlayerFragment extends Fragment {
         super.onDestroy();
         mPlayerServiceBinder = null;
         if (mMediaController != null) {
-            mMediaController.unregisterCallback(mCallback);
+            mMediaController.unregisterCallback(mMediaCallback);
             mMediaController = null;
         }
         getActivity().unbindService(mServiceConnection);

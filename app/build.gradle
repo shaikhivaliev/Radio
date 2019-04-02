@@ -11,7 +11,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "API_URL", '"http://api.dirble.com/v2/"'
-        buildConfigField "String", "API_KEY", '"ded77965545fa39fccb4e2343e"'
+        buildConfigField "String", "API_KEY", '"7fdabdc9d32c18ea9bc077d41e"'
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
