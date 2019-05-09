@@ -19,19 +19,9 @@
         tools:ignore="GoogleAppIndexingWarning"
         android:usesCleartextTraffic="true">
 
-        <receiver android:name="android.support.v4.media.session.MediaButtonReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
-            </intent-filter>
-        </receiver>
-
-        <service
-            android:name=".ui.player.PlayerService"
-            android:exported="false">
-        </service>
 
         <activity
-            android:name=".common.ContainerActivity"
+            android:name=".MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,10 +29,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.player.PlayerActivity"
-            android:screenOrientation="portrait">
-
-        </activity>
 
     </application>
 

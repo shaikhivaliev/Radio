@@ -11,7 +11,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "API_URL", '"http://api.dirble.com/v2/"'
-        buildConfigField "String", "API_KEY", '"7fdabdc9d32c18ea9bc077d41e"'
+        buildConfigField "String", "API_KEY", '"fb2def33c816c8aeaa9d6f2662"'
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
@@ -40,8 +40,8 @@ dependencies {
 
     implementation 'com.squareup.picasso:picasso:2.71828'
 
-    implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
-    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.3'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
 
     implementation 'com.google.code.gson:gson:2.8.4'
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'

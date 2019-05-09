@@ -3,7 +3,7 @@ package com.elegion.radio;
 import android.app.Application;
 import android.arch.persistence.room.Room;
 
-import com.elegion.radio.database.AppDatabase;
+import com.elegion.radio.data.storage.AppDatabase;
 
 public class AppDelegate extends Application {
 
