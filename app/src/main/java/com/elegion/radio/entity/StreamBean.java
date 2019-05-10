@@ -9,6 +9,10 @@ public class StreamBean implements Serializable {
     @SerializedName("stream")
     private String streamResource;
 
+    public StreamBean(String streamResource) {
+        this.streamResource = streamResource;
+    }
+
     public String getStreamResource() {
         return streamResource;
     }

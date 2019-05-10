@@ -23,13 +23,11 @@ public class Station implements Serializable {
     @SerializedName("streams")
     private List<StreamBean> mStreamBeans;
 
-
-    public Station(String id, String name, ImageBean image, List<CategoriesBean> categoriesBean) {
-        this.id = id;
+    public Station(String name, List<StreamBean> streamBeans) {
         this.name = name;
-        this.image = image;
-        mCategoriesBean = categoriesBean;
+        mStreamBeans = streamBeans;
     }
+
 
     public String getId() {
         return id;
