@@ -1,8 +1,6 @@
-package com.elegion.radio.data.server;
+package com.elegion.radio.model.server;
 
 import com.elegion.radio.BuildConfig;
-import com.elegion.radio.data.server.ApiKeyInterceptor;
-import com.elegion.radio.data.server.DirbleApi;
 import com.google.gson.Gson;
 
 import okhttp3.OkHttpClient;

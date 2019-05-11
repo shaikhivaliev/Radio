@@ -11,35 +11,34 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import com.elegion.radio.AppDelegate;
-import com.elegion.radio.data.server.ApiUtils;
-import com.elegion.radio.data.storage.AppDatabase;
-import com.elegion.radio.data.storage.StationDao;
 import com.elegion.radio.entity.FavoriteStation;
 import com.elegion.radio.entity.RecentStation;
+import com.elegion.radio.model.server.ApiUtils;
+import com.elegion.radio.model.storage.Storage;
 import com.elegion.radio.service.AudioPlayerService;
 
-import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 
 public class PlayerPresenter {
 
-    public static final String SERVICE_PRESENTER = "SERVICE_PRESENTER";
+    private static final String SERVICE_PRESENTER = "SERVICE_PRESENTER";
 
     private PlayerView mView;
+    private Storage mStorage;
+
+    private RecentStation mRecentStation;
+    private FavoriteStation mFavoriteStation;
 
     private ServiceConnection mServiceConnection;
     private AudioPlayerService.AudioPlayerBinder mBinder;
     private MediaControllerCompat mMediaController;
 
-    AppDatabase database = AppDelegate.getInstance().getDatabase();
-    StationDao stationDao = database.getStationDao();
-
-    public PlayerPresenter(PlayerView view) {
+    public PlayerPresenter(PlayerView view, Storage storage) {
         mView = view;
+        mStorage = storage;
     }
 
     public void startAudioService(String stationStreamUrl) {
@@ -69,6 +68,7 @@ public class PlayerPresenter {
                     mMediaController.unregisterCallback(mMediaCallback);
                     mMediaController = null;
                 }
+
             }
         };
 
@@ -76,7 +76,7 @@ public class PlayerPresenter {
         AppDelegate.getInstance().bindService(new Intent(AppDelegate.getInstance(), AudioPlayerService.class), mServiceConnection, BIND_AUTO_CREATE);
     }
 
-    MediaControllerCompat.Callback mMediaCallback = new MediaControllerCompat.Callback() {
+    private MediaControllerCompat.Callback mMediaCallback = new MediaControllerCompat.Callback() {
         @Override
         public void onPlaybackStateChanged(PlaybackStateCompat state) {
             if (state == null)
@@ -120,24 +120,6 @@ public class PlayerPresenter {
     }
 
 
-    public void isAddedInDatabase(String stationId) {
-
-        stationDao.getFavoriteStationById(Integer.valueOf(stationId))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableSingleObserver<FavoriteStation>() {
-                    @Override
-                    public void onSuccess(FavoriteStation favoriteStation) {
-                        mView.isAddedInDatabase(true);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        mView.isAddedInDatabase(false);
-                    }
-                });
-    }
-
     @SuppressLint("CheckResult")
     public void getStation(String stationId) {
 
@@ -145,71 +127,36 @@ public class PlayerPresenter {
                 .getStationById(String.valueOf(stationId))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doFinally(() -> addToRecent(stationId))
-                .subscribe(response -> mView.showStation(response),
+                .doFinally(() -> mStorage.addToRecent(stationId, getRecentStation()))
+                .subscribe(station -> {
+                            mView.showStation(station);
+                            mRecentStation = new RecentStation(0, Integer.valueOf(stationId), station.getName(), station.getImage().getUrl(), station.getCategoriesBean().get(0).getTitle());
+                            mFavoriteStation = new FavoriteStation(Integer.valueOf(stationId), station.getName(), station.getImage().getUrl(), station.getCategoriesBean().get(0).getTitle());
+
+                        },
                         throwable -> mView.showError());
 
     }
 
-    @SuppressLint("CheckResult")
-    private void addToRecent(String stationId) {
 
-        stationDao.getRecentlyStations()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(recentlyStations -> {
-                    int isAlreadyInRecently = 0;
-
-                    for (RecentStation station : recentlyStations) {
-                        if (station.getStationId() == Integer.valueOf(stationId)) {
-                            isAlreadyInRecently++;
-                        }
-                    }
-
-                    if (isAlreadyInRecently > 0) {
-                        return;
-                    } else if (recentlyStations.size() < 4) {
-                        insertStation();
-                    } else updateStation();
-                });
+    private FavoriteStation getFavoriteStation() {
+        return mFavoriteStation;
     }
 
-    private void updateStation() {
-        Completable.fromAction(() -> {
-            stationDao.deleteStationFromRecently();
-            RecentStation recentStation = mView.getRecentStation();
-            stationDao.insertStationToRecently(recentStation);
-        })
-                .subscribeOn(Schedulers.io())
-                .subscribe();
+    private RecentStation getRecentStation() {
+        return mRecentStation;
     }
 
-    private void insertStation() {
-        Completable.fromAction(() -> {
-            RecentStation recentStation = mView.getRecentStation();
-            stationDao.insertStationToRecently(recentStation);
-        })
-                .subscribeOn(Schedulers.io())
-                .subscribe();
+    public boolean isAddedInDatabase(String stationId) {
+        return mStorage.isAddedInDatabase(stationId);
     }
-
 
     public void insertStationToFavorites() {
-
-        Completable.fromAction(() -> {
-            FavoriteStation favoriteStation = mView.getFavoriteStation();
-            stationDao.insertStationToFavorites(favoriteStation);
-        })
-                .subscribeOn(Schedulers.io())
-                .subscribe();
-
+        mStorage.insertStationToFavorites(getFavoriteStation());
     }
 
     public void deleteStationFromFavorites(String stationId) {
-
-        Completable.fromAction(() -> stationDao.deleteStationFromFavorites(Integer.valueOf(stationId)))
-                .subscribeOn(Schedulers.io())
-                .subscribe();
-
+        mStorage.deleteStationFromFavorites(stationId);
     }
+
 }

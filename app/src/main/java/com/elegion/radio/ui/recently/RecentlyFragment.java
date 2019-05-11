@@ -17,6 +17,7 @@ import com.elegion.radio.OnChangeFragment;
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
 import com.elegion.radio.entity.RecentStation;
+import com.elegion.radio.model.storage.Storage;
 import com.elegion.radio.presentation.recently.RecentlyPresenter;
 import com.elegion.radio.presentation.recently.RecentlyView;
 import com.elegion.radio.ui.player.PlayerFragment;
@@ -34,14 +35,17 @@ public class RecentlyFragment extends Fragment implements
     private RecyclerView mRecyclerView;
     private RecentlyAdapter mAdapter;
 
-    private RecentlyPresenter mPresenter;
     private OnChangeFragment mChangeFragment;
+    private Storage mStorage;
+    private RecentlyPresenter mPresenter;
 
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         mChangeFragment = (OnChangeFragment) context;
+        mStorage = context instanceof Storage.StorageOwner ? ((Storage.StorageOwner) context).obtainStorage() : null;
+
     }
 
     @Nullable
@@ -74,7 +78,7 @@ public class RecentlyFragment extends Fragment implements
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mPresenter = new RecentlyPresenter(this);
+        mPresenter = new RecentlyPresenter(this, mStorage);
         mPresenter.getRecentlyStations();
 
     }

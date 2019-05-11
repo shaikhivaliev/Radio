@@ -16,6 +16,7 @@ import com.elegion.radio.OnChangeFragment;
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
 import com.elegion.radio.entity.FavoriteStation;
+import com.elegion.radio.model.storage.Storage;
 import com.elegion.radio.presentation.favorites.FavoritesPresenter;
 import com.elegion.radio.presentation.favorites.FavoritesView;
 import com.elegion.radio.ui.player.PlayerFragment;
@@ -31,12 +32,14 @@ public class FavoritesFragment extends Fragment implements
     private TextView mFavoritesMock;
 
     private OnChangeFragment mChangeFragment;
+    private Storage mStorage;
     private FavoritesPresenter mPresenter;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         mChangeFragment = (OnChangeFragment) context;
+        mStorage = context instanceof Storage.StorageOwner ? ((Storage.StorageOwner) context).obtainStorage() : null;
     }
 
     @Nullable
@@ -57,7 +60,7 @@ public class FavoritesFragment extends Fragment implements
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setAdapter(mAdapter);
 
-        mPresenter = new FavoritesPresenter(this);
+        mPresenter = new FavoritesPresenter(this, mStorage);
         mPresenter.getFavoritesStation();
 
     }

@@ -2,40 +2,22 @@ package com.elegion.radio.presentation.favorites;
 
 import android.annotation.SuppressLint;
 
-import com.elegion.radio.AppDelegate;
-import com.elegion.radio.data.storage.AppDatabase;
-import com.elegion.radio.data.storage.StationDao;
-
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
+import com.elegion.radio.model.storage.Storage;
 
 public class FavoritesPresenter {
 
     private FavoritesView mView;
+    private Storage mStorage;
 
-    public FavoritesPresenter(FavoritesView view) {
+
+    public FavoritesPresenter(FavoritesView view, Storage storage) {
         mView = view;
+        mStorage = storage;
     }
 
     @SuppressLint("CheckResult")
     public void getFavoritesStation() {
-
-        AppDatabase mDatabase = AppDelegate.getInstance().getDatabase();
-        StationDao mStationDao = mDatabase.getStationDao();
-
-
-        mStationDao.getFavoritesStations()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(favoriteStations -> {
-
-                    if (!favoriteStations.isEmpty()) {
-                        mView.showFavoritesStation(favoriteStations);
-
-                    } else {
-                        mView.showMock();
-                    }
-                });
+        mStorage.getFavoritesStation();
     }
 
 }

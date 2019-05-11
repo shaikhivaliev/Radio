@@ -2,7 +2,7 @@ package com.elegion.radio.presentation.stations;
 
 import android.annotation.SuppressLint;
 
-import com.elegion.radio.data.server.ApiUtils;
+import com.elegion.radio.model.server.ApiUtils;
 import com.elegion.radio.entity.Station;
 
 import java.util.List;

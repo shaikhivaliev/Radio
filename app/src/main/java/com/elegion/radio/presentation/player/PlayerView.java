@@ -15,10 +15,6 @@ public interface PlayerView {
 
     void showError();
 
-    RecentStation getRecentStation();
-
-    FavoriteStation getFavoriteStation();
-
-    void isAddedInDatabase(boolean isAdded);
+    void isAddedInDatabase();
 
 }

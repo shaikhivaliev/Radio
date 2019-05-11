@@ -1,6 +1,7 @@
 package com.elegion.radio.ui.player;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,9 +16,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.elegion.radio.R;
-import com.elegion.radio.entity.FavoriteStation;
-import com.elegion.radio.entity.RecentStation;
 import com.elegion.radio.entity.Station;
+import com.elegion.radio.model.storage.Storage;
 import com.elegion.radio.presentation.player.PlayerPresenter;
 import com.elegion.radio.presentation.player.PlayerView;
 import com.squareup.picasso.Picasso;
@@ -41,7 +41,7 @@ public class PlayerFragment extends Fragment implements
     private String mStyle;
     private ImageButton mPlayPauseButton;
 
-
+    private Storage mStorage;
     private PlayerPresenter mPresenter;
 
 
@@ -49,6 +49,12 @@ public class PlayerFragment extends Fragment implements
         PlayerFragment fragment = new PlayerFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mStorage = context instanceof Storage.StorageOwner ? ((Storage.StorageOwner) context).obtainStorage() : null;
     }
 
     View.OnClickListener playButtonListener = new View.OnClickListener() {
@@ -124,8 +130,8 @@ public class PlayerFragment extends Fragment implements
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mPresenter = new PlayerPresenter(this);
-        mPresenter.isAddedInDatabase(mStationId);
+        mPresenter = new PlayerPresenter(this, mStorage);
+        isAddedInDatabase();
         Log.d(SERVICE_FRAGMENT, "Запрос к API, поиск станции по id - " + mStationId);
         mPresenter.getStation(mStationId);
 
@@ -133,8 +139,8 @@ public class PlayerFragment extends Fragment implements
 
 
     @Override
-    public void isAddedInDatabase(boolean isAdded) {
-        if (isAdded) {
+    public void isAddedInDatabase() {
+        if (mPresenter.isAddedInDatabase(mStationId)) {
             mAddToFavorites.setImageResource(R.drawable.ic_star_filling);
             mAddToFavorites.setOnClickListener(removeFromFavorites);
         } else {
@@ -174,16 +180,6 @@ public class PlayerFragment extends Fragment implements
 
     }
 
-    @Override
-    public RecentStation getRecentStation() {
-        return new RecentStation(0, Integer.valueOf(mStationId), mStationName.getText().toString(), mUrl, mStyle);
-    }
-
-    @Override
-    public FavoriteStation getFavoriteStation() {
-        return new FavoriteStation(Integer.valueOf(mStationId), mStationName.getText().toString(), mUrl, mStyle);
-    }
-
 
     @Override
     public void showError() {
@@ -195,7 +191,6 @@ public class PlayerFragment extends Fragment implements
     public void onDestroy() {
         super.onDestroy();
         Log.d(SERVICE_FRAGMENT, "onDestroy: ");
-
         mPresenter.stopAudioService();
     }
 }

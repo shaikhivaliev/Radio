@@ -1,4 +1,4 @@
-package com.elegion.radio.data.server;
+package com.elegion.radio.model.server;
 
 import android.support.annotation.NonNull;
 

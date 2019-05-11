@@ -1,4 +1,4 @@
-package com.elegion.radio.data.storage;
+package com.elegion.radio.model.storage;
 
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
@@ -13,7 +13,7 @@ import java.util.List;
 import io.reactivex.Single;
 
 @Dao
-public interface StationDao {
+public interface RadioDao {
 
     /*------Favorites--------*/
 
