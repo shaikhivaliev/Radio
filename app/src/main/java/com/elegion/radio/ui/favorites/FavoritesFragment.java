@@ -15,7 +15,7 @@ import android.widget.TextView;
 import com.elegion.radio.OnChangeFragment;
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
-import com.elegion.radio.data.storage.FavoriteStation;
+import com.elegion.radio.entity.FavoriteStation;
 import com.elegion.radio.presentation.favorites.FavoritesPresenter;
 import com.elegion.radio.presentation.favorites.FavoritesView;
 import com.elegion.radio.ui.player.PlayerFragment;

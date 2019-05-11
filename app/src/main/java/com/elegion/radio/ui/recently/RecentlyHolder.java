@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
-import com.elegion.radio.data.storage.RecentStation;
+import com.elegion.radio.entity.RecentStation;
 import com.squareup.picasso.Picasso;
 
 public class RecentlyHolder extends RecyclerView.ViewHolder {

@@ -1,18 +1,11 @@
 package com.elegion.radio.ui.player;
 
 import android.annotation.SuppressLint;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,20 +15,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.elegion.radio.R;
-import com.elegion.radio.data.storage.FavoriteStation;
-import com.elegion.radio.data.storage.RecentStation;
+import com.elegion.radio.entity.FavoriteStation;
+import com.elegion.radio.entity.RecentStation;
 import com.elegion.radio.entity.Station;
 import com.elegion.radio.presentation.player.PlayerPresenter;
 import com.elegion.radio.presentation.player.PlayerView;
-import com.elegion.radio.service.AudioPlayerService;
 import com.squareup.picasso.Picasso;
-
-import static android.content.Context.BIND_AUTO_CREATE;
 
 
 public class PlayerFragment extends Fragment implements
         PlayerView {
 
+    public static final String SERVICE_FRAGMENT = "SERVICE_FRAGMENT";
     public static final String STATION_KEY = "STATION_KEY";
 
     private View mErrorView;
@@ -50,10 +41,6 @@ public class PlayerFragment extends Fragment implements
     private String mStyle;
     private ImageButton mPlayPauseButton;
 
-    private ServiceConnection mServiceConnection;
-    private AudioPlayerService.AudioPlayerBinder mBinder;
-
-    private MediaControllerCompat mMediaController;
 
     private PlayerPresenter mPresenter;
 
@@ -64,56 +51,21 @@ public class PlayerFragment extends Fragment implements
         return fragment;
     }
 
-    MediaControllerCompat.Callback mMediaCallback = new MediaControllerCompat.Callback() {
-        @Override
-        public void onPlaybackStateChanged(PlaybackStateCompat state) {
-            if (state == null)
-                return;
-            boolean playing = state.getState() == PlaybackStateCompat.STATE_PLAYING;
-            if (playing) {
-                mPlayPauseButton.setImageResource(R.drawable.ic_pause);
-                mPlayPauseButton.setOnClickListener(pauseButtonListener);
-
-            } else {
-                mPlayPauseButton.setImageResource(R.drawable.ic_play);
-                mPlayPauseButton.setOnClickListener(playButtonListener);
-            }
-        }
-
-        @Override
-        public void onMetadataChanged(MediaMetadataCompat metadata) {
-            super.onMetadataChanged(metadata);
-
-            if (metadata == null) {
-                return;
-            }
-
-        }
-    };
-
     View.OnClickListener playButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            mPlayPauseButton.setImageResource(R.drawable.ic_pause);
-            mPlayPauseButton.setOnClickListener(pauseButtonListener);
-
-
-
-            if (mMediaController != null)
-                mMediaController.getTransportControls().play();
-
+            PlayerFragment.this.showPauseButton();
+            Log.d(SERVICE_FRAGMENT, "Play");
+            mPresenter.playRadio();
         }
     };
 
     View.OnClickListener pauseButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            mPlayPauseButton.setImageResource(R.drawable.ic_play);
-            mPlayPauseButton.setOnClickListener(playButtonListener);
-
-            if (mMediaController != null)
-                mMediaController.getTransportControls().pause();
-
+            PlayerFragment.this.showPlayButton();
+            Log.d(SERVICE_FRAGMENT, "Pause");
+            mPresenter.pauseRadio();
         }
     };
 
@@ -147,7 +99,6 @@ public class PlayerFragment extends Fragment implements
             mStationId = getArguments().getString(STATION_KEY);
         }
 
-
     }
 
 
@@ -175,52 +126,8 @@ public class PlayerFragment extends Fragment implements
 
         mPresenter = new PlayerPresenter(this);
         mPresenter.isAddedInDatabase(mStationId);
-        //getStationMock();
-
-        initService();
-
-        //todo сравнить станцию которая играет (или ее отсутствие) и станцию на которую мы только перешли ->
-        // отобразить/показать play/stop -> начать проигрывать новую станцию/сделать паузу в текущей
-
-    }
-
-    private void getStationMock() {
-        mStreamResource = "http://http-live.sr.se/p3-mp3-192";
-    }
-
-
-    private void initService() {
-
-        mServiceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder serviceBinder) {
-                mBinder = (AudioPlayerService.AudioPlayerBinder) serviceBinder;
-                mPresenter.getStation(mStationId);
-
-                    try {
-                        mMediaController = new MediaControllerCompat(getActivity(), mBinder.getMediaSessionToken());
-                        mMediaController.registerCallback(mMediaCallback);
-                        mMediaCallback.onPlaybackStateChanged(mMediaController.getPlaybackState());
-                    } catch (RemoteException e) {
-                        mMediaController = null;
-                    }
-
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                mBinder = null;
-                if (mMediaController != null) {
-                    mMediaController.unregisterCallback(mMediaCallback);
-                    mMediaController = null;
-                }
-
-
-            }
-        };
-
-        getActivity().bindService(new Intent(getActivity(), AudioPlayerService.class), mServiceConnection, BIND_AUTO_CREATE);
-
+        Log.d(SERVICE_FRAGMENT, "Запрос к API, поиск станции по id - " + mStationId);
+        mPresenter.getStation(mStationId);
 
     }
 
@@ -238,6 +145,19 @@ public class PlayerFragment extends Fragment implements
 
 
     @Override
+    public void showPlayButton() {
+        mPlayPauseButton.setImageResource(R.drawable.ic_play);
+        mPlayPauseButton.setOnClickListener(playButtonListener);
+    }
+
+    @Override
+    public void showPauseButton() {
+        mPlayPauseButton.setImageResource(R.drawable.ic_pause);
+        mPlayPauseButton.setOnClickListener(pauseButtonListener);
+    }
+
+
+    @Override
     public void showStation(Station station) {
         mStyle = station.getCategoriesBean().get(0).getTitle();
         mUrl = station.getImage().getUrl();
@@ -249,7 +169,8 @@ public class PlayerFragment extends Fragment implements
         mStationName.setText(station.getName());
         mStreamResource = station.getStreamBeans().get(0).getStreamResource();
 
-        mBinder.setStreamResources(mStreamResource);
+        Log.d(SERVICE_FRAGMENT, "Получили URL - " + mStreamResource);
+        mPresenter.startAudioService(mStreamResource);
 
     }
 
@@ -273,13 +194,9 @@ public class PlayerFragment extends Fragment implements
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mBinder = null;
-        if (mMediaController != null) {
-            mMediaController.unregisterCallback(mMediaCallback);
-            mMediaController = null;
-        }
-        getActivity().unbindService(mServiceConnection);
+        Log.d(SERVICE_FRAGMENT, "onDestroy: ");
 
+        mPresenter.stopAudioService();
     }
 }
 

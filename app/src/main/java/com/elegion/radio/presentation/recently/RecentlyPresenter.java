@@ -4,7 +4,7 @@ import android.annotation.SuppressLint;
 
 import com.elegion.radio.AppDelegate;
 import com.elegion.radio.data.storage.AppDatabase;
-import com.elegion.radio.data.storage.RecentStation;
+import com.elegion.radio.entity.RecentStation;
 import com.elegion.radio.data.storage.StationDao;
 
 import java.util.List;

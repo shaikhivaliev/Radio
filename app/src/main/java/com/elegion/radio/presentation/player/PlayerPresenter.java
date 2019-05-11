@@ -1,29 +1,124 @@
 package com.elegion.radio.presentation.player;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 
 import com.elegion.radio.AppDelegate;
 import com.elegion.radio.data.server.ApiUtils;
 import com.elegion.radio.data.storage.AppDatabase;
-import com.elegion.radio.data.storage.FavoriteStation;
-import com.elegion.radio.data.storage.RecentStation;
 import com.elegion.radio.data.storage.StationDao;
+import com.elegion.radio.entity.FavoriteStation;
+import com.elegion.radio.entity.RecentStation;
+import com.elegion.radio.service.AudioPlayerService;
 
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
+import static android.content.Context.BIND_AUTO_CREATE;
+
 public class PlayerPresenter {
 
+    public static final String SERVICE_PRESENTER = "SERVICE_PRESENTER";
+
     private PlayerView mView;
+
+    private ServiceConnection mServiceConnection;
+    private AudioPlayerService.AudioPlayerBinder mBinder;
+    private MediaControllerCompat mMediaController;
+
     AppDatabase database = AppDelegate.getInstance().getDatabase();
     StationDao stationDao = database.getStationDao();
-
 
     public PlayerPresenter(PlayerView view) {
         mView = view;
     }
+
+    public void startAudioService(String stationStreamUrl) {
+
+        mServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder serviceBinder) {
+                mBinder = (AudioPlayerService.AudioPlayerBinder) serviceBinder;
+                mBinder.setStreamResources(stationStreamUrl);
+                Log.d(SERVICE_PRESENTER, "onServiceConnected, получили экземпляр mBinder, засетили - " + stationStreamUrl);
+
+                try {
+                    mMediaController = new MediaControllerCompat(AppDelegate.getInstance(), mBinder.getMediaSessionToken());
+                    mMediaController.registerCallback(mMediaCallback);
+                    mMediaCallback.onPlaybackStateChanged(mMediaController.getPlaybackState());
+
+
+                } catch (RemoteException e) {
+                    mMediaController = null;
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                mBinder = null;
+                if (mMediaController != null) {
+                    mMediaController.unregisterCallback(mMediaCallback);
+                    mMediaController = null;
+                }
+            }
+        };
+
+        Log.d(SERVICE_PRESENTER, "bindService");
+        AppDelegate.getInstance().bindService(new Intent(AppDelegate.getInstance(), AudioPlayerService.class), mServiceConnection, BIND_AUTO_CREATE);
+    }
+
+    MediaControllerCompat.Callback mMediaCallback = new MediaControllerCompat.Callback() {
+        @Override
+        public void onPlaybackStateChanged(PlaybackStateCompat state) {
+            if (state == null)
+                return;
+            boolean playing = state.getState() == PlaybackStateCompat.STATE_PLAYING;
+            if (playing) {
+                Log.d(SERVICE_PRESENTER, "mMediaCallback - showPauseButton");
+                mView.showPauseButton();
+
+            } else {
+                Log.d(SERVICE_PRESENTER, "mMediaCallback - showPlayButton");
+                mView.showPlayButton();
+            }
+        }
+    };
+
+    public void playRadio() {
+        Log.d(SERVICE_PRESENTER, "mMediaController - play");
+
+        if (mMediaController != null)
+            mMediaController.getTransportControls().play();
+    }
+
+    public void pauseRadio() {
+        Log.d(SERVICE_PRESENTER, "mMediaController - pause");
+
+        if (mMediaController != null)
+            mMediaController.getTransportControls().pause();
+    }
+
+    public void stopAudioService() {
+
+        mBinder = null;
+        if (mMediaController != null) {
+            Log.d(SERVICE_PRESENTER, "unregisterCallback");
+            mMediaController.unregisterCallback(mMediaCallback);
+            mMediaController = null;
+        }
+        Log.d(SERVICE_PRESENTER, "unbindService");
+        AppDelegate.getInstance().unbindService(mServiceConnection);
+    }
+
 
     public void isAddedInDatabase(String stationId) {
 
@@ -45,6 +140,7 @@ public class PlayerPresenter {
 
     @SuppressLint("CheckResult")
     public void getStation(String stationId) {
+
         ApiUtils.getApiService()
                 .getStationById(String.valueOf(stationId))
                 .subscribeOn(Schedulers.io())

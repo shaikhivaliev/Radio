@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 
 import com.elegion.radio.AppDelegate;
 import com.elegion.radio.MainActivity;
@@ -43,7 +44,8 @@ import okhttp3.OkHttpClient;
 
 public class AudioPlayerService extends Service {
 
-    //todo разница между simple player и обычным
+    public static final String SERVICE = "SERVICE";
+
     private SimpleExoPlayer mExoPlayer;
     private ExtractorsFactory extractorsFactory;
     private DataSource.Factory dataSourceFactory;
@@ -53,19 +55,14 @@ public class AudioPlayerService extends Service {
 
     final MediaMetadataCompat.Builder mMediaMetadataBuilder = new MediaMetadataCompat.Builder();
 
-    private void updateMetadata(String stationName) {
-        //todo засетить иконку, как засетить иконку для окна блокировки?
+    public void updateMetadata(String stationName) {
         mMediaMetadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, stationName);
         mMediaSession.setMetadata(mMediaMetadataBuilder.build());
     }
 
-    // ...состояния плеера
-    // Здесь мы указываем действия, которые собираемся обрабатывать в коллбэках.
     final PlaybackStateCompat.Builder mActions = new PlaybackStateCompat.Builder()
             .setActions(PlaybackStateCompat.ACTION_PLAY
-                    | PlaybackStateCompat.ACTION_STOP
-                    | PlaybackStateCompat.ACTION_PAUSE
-                    | PlaybackStateCompat.ACTION_PLAY_PAUSE);
+                    | PlaybackStateCompat.ACTION_PAUSE);
 
 
     @Override
@@ -77,6 +74,7 @@ public class AudioPlayerService extends Service {
     }
 
     private void initExoPlayer() {
+        Log.d(SERVICE, "initExoPlayer");
         mExoPlayer = ExoPlayerFactory.newSimpleInstance(new DefaultRenderersFactory(this), new DefaultTrackSelector(), new DefaultLoadControl());
         mExoPlayer.addListener(exoPlayerListener);
         DataSource.Factory httpDataSourceFactory = new OkHttpDataSourceFactory(new OkHttpClient(), Util.getUserAgent(this, getString(R.string.app_name)), null);
@@ -87,6 +85,7 @@ public class AudioPlayerService extends Service {
     }
 
     public void initMediaSession() {
+        Log.d(SERVICE, "initMediaSession");
 
         mMediaSession = new MediaSessionCompat(this, "AudioPlayerService");
 
@@ -94,10 +93,9 @@ public class AudioPlayerService extends Service {
         // FLAG_HANDLES_TRANSPORT_CONTROLS - хотим получать события от кнопок на окне блокировки
         mMediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
-        // Отдаем наши коллбэки
         mMediaSession.setCallback(mediaSessionCallback);
 
-        // Укажем activity, которую запустит система, если пользователь заинтересуется подробностями данной сессии
+        // activity, которую запустит система, если пользователь заинтересуется подробностями данной сессии
         Intent activityIntent = new Intent(AppDelegate.getInstance(), MainActivity.class);
         mMediaSession.setSessionActivity(PendingIntent.getActivity(AppDelegate.getInstance(), 0, activityIntent, 0));
 
@@ -110,31 +108,27 @@ public class AudioPlayerService extends Service {
 
         @Override
         public void onPlay() {
+            Log.d(SERVICE, "play");
+
             if (!mExoPlayer.getPlayWhenReady()) {
-                startService(new Intent(AppDelegate.getInstance(), AudioPlayerService.class));
 
-/*
-                StreamBean streamBean = new StreamBean("http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio4fm_mf_p");
-                List<StreamBean> mStreamBeans = new ArrayList<>();
-                mStreamBeans.set(0, streamBean);
-                Station station = new Station("Radio name", mStreamBeans);
+                Log.d(SERVICE, "play  - start service");
+                startService(new Intent(getApplicationContext(), AudioPlayerService.class));
 
-*/
-
+                Log.d(SERVICE, "updateMetadata");
                 updateMetadata("Radio station name");
 
-                // Указываем, что наше приложение теперь активный плеер и кнопки
-                // на окне блокировки должны управлять именно нами
-                mMediaSession.setActive(true); // Сразу после получения фокуса
+                Log.d(SERVICE, "onPlay - setActive(true)");
+                mMediaSession.setActive(true);
 
-                // Сообщаем новое состояние
+                Log.d(SERVICE, "onPlay - cообщаем новое состояние");
                 mMediaSession.setPlaybackState(mActions.setState(PlaybackStateCompat.STATE_PLAYING,
                         PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
 
-                // Загружаем URL аудио-файла в ExoPlayer
+                Log.d(SERVICE, "onPlay - загружаем URL в ExoPlayer");
                 prepareToPlay(Uri.parse(mStreamResources));
 
-                // Запускаем воспроизведение
+                Log.d(SERVICE, "onPlay - запускаем проигрывание");
                 mExoPlayer.setPlayWhenReady(true);
             }
 
@@ -142,26 +136,19 @@ public class AudioPlayerService extends Service {
 
         @Override
         public void onPause() {
+            Log.d(SERVICE, "pause");
+
             if (mExoPlayer.getPlayWhenReady()) {
                 mExoPlayer.setPlayWhenReady(false);
             }
 
+            Log.d(SERVICE, "onPause - setActive(false)");
+            mMediaSession.setActive(false);
+
+            Log.d(SERVICE, "onPause - cообщаем новое состояние");
             mMediaSession.setPlaybackState(mActions.setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
             currentState = PlaybackStateCompat.STATE_PAUSED;
 
-        }
-
-        @Override
-        public void onStop() {
-            if (mExoPlayer.getPlayWhenReady()) {
-                mExoPlayer.setPlayWhenReady(false);
-            }
-
-            // Все, больше мы не "главный" плеер, уходим со сцены
-            mMediaSession.setActive(false);
-
-            mMediaSession.setPlaybackState(mActions.setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
-            currentState = PlaybackStateCompat.STATE_STOPPED;
         }
 
 
@@ -191,9 +178,6 @@ public class AudioPlayerService extends Service {
 
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-            if (playWhenReady && playbackState == ExoPlayer.STATE_ENDED) {
-                mediaSessionCallback.onSkipToNext();
-            }
         }
 
         @Override
@@ -218,6 +202,7 @@ public class AudioPlayerService extends Service {
 
     public class AudioPlayerBinder extends Binder {
         public MediaSessionCompat.Token getMediaSessionToken() {
+            Log.d(SERVICE, "Возвращаем токен сессии: " + mMediaSession.getSessionToken().toString());
             return mMediaSession.getSessionToken();
         }
 
@@ -225,15 +210,12 @@ public class AudioPlayerService extends Service {
             mStreamResources = streamResources;
         }
 
-        public String getCurrentStreamResources() {
-            return mStreamResources;
-        }
-
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(SERVICE, "onDestroy: ");
         mMediaSession.release();
     }
 }

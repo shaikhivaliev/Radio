@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
-import com.elegion.radio.data.storage.FavoriteStation;
+import com.elegion.radio.entity.FavoriteStation;
 import com.squareup.picasso.Picasso;
 
 public class FavoriteHolder extends RecyclerView.ViewHolder {

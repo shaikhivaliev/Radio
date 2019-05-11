@@ -1,6 +1,6 @@
 package com.elegion.radio.presentation.recently;
 
-import com.elegion.radio.data.storage.RecentStation;
+import com.elegion.radio.entity.RecentStation;
 
 import java.util.List;
 

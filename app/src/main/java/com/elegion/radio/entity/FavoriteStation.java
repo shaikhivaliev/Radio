@@ -1,4 +1,4 @@
-package com.elegion.radio.data.storage;
+package com.elegion.radio.entity;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;

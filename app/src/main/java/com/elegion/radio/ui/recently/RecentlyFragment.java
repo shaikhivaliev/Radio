@@ -16,7 +16,7 @@ import android.widget.TextView;
 import com.elegion.radio.OnChangeFragment;
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
-import com.elegion.radio.data.storage.RecentStation;
+import com.elegion.radio.entity.RecentStation;
 import com.elegion.radio.presentation.recently.RecentlyPresenter;
 import com.elegion.radio.presentation.recently.RecentlyView;
 import com.elegion.radio.ui.player.PlayerFragment;

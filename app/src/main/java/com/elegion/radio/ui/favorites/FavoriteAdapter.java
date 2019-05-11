@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
-import com.elegion.radio.data.storage.FavoriteStation;
+import com.elegion.radio.entity.FavoriteStation;
 
 import java.util.ArrayList;
 import java.util.List;

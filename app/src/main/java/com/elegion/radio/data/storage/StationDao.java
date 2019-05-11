@@ -5,6 +5,9 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 
+import com.elegion.radio.entity.FavoriteStation;
+import com.elegion.radio.entity.RecentStation;
+
 import java.util.List;
 
 import io.reactivex.Single;
