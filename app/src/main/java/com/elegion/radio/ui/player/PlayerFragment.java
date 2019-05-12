@@ -175,6 +175,7 @@ public class PlayerFragment extends Fragment implements
         mStationName.setText(station.getName());
         mStreamResource = station.getStreamBeans().get(0).getStreamResource();
 
+        //FIXME
         Log.d(SERVICE_FRAGMENT, "Получили URL - " + mStreamResource);
         mPresenter.startAudioService(mStreamResource);
 

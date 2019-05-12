@@ -2,7 +2,10 @@ package com.elegion.radio.presentation.recently;
 
 import android.annotation.SuppressLint;
 
+import com.elegion.radio.entity.RecentStation;
 import com.elegion.radio.model.storage.Storage;
+
+import java.util.List;
 
 public class RecentlyPresenter {
 
@@ -17,6 +20,12 @@ public class RecentlyPresenter {
 
     @SuppressLint("CheckResult")
     public void getRecentlyStations() {
-        mStorage.getRecentlyStations();
+        List<RecentStation> recentStations = mStorage.getRecentlyStations();
+        if (!recentStations.isEmpty()) {
+            mView.showRecentlyStation(recentStations);
+        } else {
+            mView.showMock();
+        }
+
     }
 }

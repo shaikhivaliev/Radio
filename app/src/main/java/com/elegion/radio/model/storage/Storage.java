@@ -5,18 +5,20 @@ import android.annotation.SuppressLint;
 import com.elegion.radio.entity.FavoriteStation;
 import com.elegion.radio.entity.RecentStation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
-import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class Storage {
 
     private RadioDao mRadioDao;
-    boolean isAddedInDatabase = false;
+    private boolean isAddedInDatabase = false;
+    private List<FavoriteStation> mFavoriteStations = new ArrayList<>();
+    private List<RecentStation> mRecentStations = new ArrayList<>();
 
 
     public Storage(RadioDao radioDao) {
@@ -24,16 +26,32 @@ public class Storage {
     }
 
     @SuppressLint("CheckResult")
+
+    //FIXME
     public void addToRecent(String stationId, RecentStation recentStation) {
 
         mRadioDao.getRecentlyStations()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(recentlyStations -> {
+                .subscribe(new Consumer<List<RecentStation>>() {
+                    @Override
+                    public void accept(List<RecentStation> recentlyStations) throws Exception {
 
-                    if (recentlyStations.size() < 4) {
-                        insertStation(recentStation);
-                    } else updateStation(recentStation);
+                        int isAlreadyInRecently = 0;
+
+                        for (RecentStation station : recentlyStations) {
+                            if (station.getStationId() == Integer.valueOf(stationId)) {
+                                isAlreadyInRecently++;
+                            }
+                        }
+
+                        if (isAlreadyInRecently > 0) return;
+
+                        if (recentlyStations.size() < 4) {
+                            Storage.this.insertStation(recentStation);
+                        } else Storage.this.updateStation(recentStation);
+
+                    }
                 });
 
     }
@@ -53,20 +71,22 @@ public class Storage {
                 .subscribe();
     }
 
+    @SuppressLint("CheckResult")
+    //FIXME
     public boolean isAddedInDatabase(String stationId) {
 
         mRadioDao.getFavoriteStationById(Integer.valueOf(stationId))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableSingleObserver<FavoriteStation>() {
+                .subscribe(new Consumer<FavoriteStation>() {
                     @Override
-                    public void onSuccess(FavoriteStation favoriteStation) {
+                    public void accept(FavoriteStation favoriteStation) throws Exception {
                         isAddedInDatabase = true;
                     }
-
+                }, new Consumer<Throwable>() {
                     @Override
-                    public void onError(Throwable e) {
-                        isAddedInDatabase = true;
+                    public void accept(Throwable throwable) throws Exception {
+                        isAddedInDatabase = false;
                     }
                 });
         return isAddedInDatabase;
@@ -91,37 +111,34 @@ public class Storage {
     }
 
     @SuppressLint("CheckResult")
-    public void getFavoritesStation() {
+    //FIXME
+    public List<FavoriteStation> getFavoritesStation() {
         mRadioDao.getFavoritesStations()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(favoriteStations -> {
-
-                    if (!favoriteStations.isEmpty()) {
-                        //mView.showFavoritesStation(favoriteStations);
-
-                    } else {
-                        // mView.showMock();
+                .subscribe(new Consumer<List<FavoriteStation>>() {
+                    @Override
+                    public void accept(List<FavoriteStation> favoriteStations) throws Exception {
+                        mFavoriteStations.clear();
+                        mFavoriteStations.addAll(favoriteStations);
                     }
                 });
+
+        return mFavoriteStations;
     }
 
     @SuppressLint("CheckResult")
-    public void getRecentlyStations() {
+    //FIXME
+    public List<RecentStation> getRecentlyStations() {
         mRadioDao.getRecentlyStations()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<List<RecentStation>>() {
-                    @Override
-                    public void accept(List<RecentStation> recentlyStations) throws Exception {
-
-                        if (!recentlyStations.isEmpty()) {
-                            //mView.showRecentlyStation(recentlyStations);
-                        } else {
-                            //mView.showMock();
-                        }
-                    }
+                .subscribe(recentlyStations -> {
+                    mRecentStations.clear();
+                    mRecentStations.addAll(recentlyStations);
                 });
+
+        return mRecentStations;
     }
 
     public interface StorageOwner {

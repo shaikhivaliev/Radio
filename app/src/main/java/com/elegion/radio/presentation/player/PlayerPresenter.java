@@ -116,7 +116,9 @@ public class PlayerPresenter {
             mMediaController = null;
         }
         Log.d(SERVICE_PRESENTER, "unbindService");
-        AppDelegate.getInstance().unbindService(mServiceConnection);
+        if (mServiceConnection != null) {
+            AppDelegate.getInstance().unbindService(mServiceConnection);
+        }
     }
 
 

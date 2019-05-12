@@ -45,7 +45,6 @@ public class RecentlyFragment extends Fragment implements
         super.onAttach(context);
         mChangeFragment = (OnChangeFragment) context;
         mStorage = context instanceof Storage.StorageOwner ? ((Storage.StorageOwner) context).obtainStorage() : null;
-
     }
 
     @Nullable
@@ -55,7 +54,6 @@ public class RecentlyFragment extends Fragment implements
 
         mGetRandomStation = v.findViewById(R.id.btn_get_random_station);
         mGetRandomStation.setOnClickListener(v1 -> {
-            //todo#1 гененрировать случайный id, обработать ситуацию когда такого id нет
             int id = 727;
 
             Bundle args = new Bundle();
