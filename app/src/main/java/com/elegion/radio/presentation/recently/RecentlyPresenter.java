@@ -1,31 +1,32 @@
 package com.elegion.radio.presentation.recently;
 
-import android.annotation.SuppressLint;
-
 import com.elegion.radio.entity.RecentStation;
-import com.elegion.radio.model.storage.Storage;
+import com.elegion.radio.model.storage.StorageCallback;
+import com.elegion.radio.model.storage.StorageData;
 
 import java.util.List;
 
-public class RecentlyPresenter {
+public class RecentlyPresenter implements StorageCallback.Recently {
 
+    private StorageData mStorageData = new StorageData();
     private RecentlyView mView;
-    private Storage mStorage;
 
-
-    public RecentlyPresenter(RecentlyView view, Storage storage) {
-        mView = view;
-        mStorage = storage;
+    public RecentlyPresenter(RecentlyView mView) {
+        this.mView = mView;
+        mStorageData.setRecentlyCallback(this);
     }
 
-    @SuppressLint("CheckResult")
     public void getRecentlyStations() {
-        List<RecentStation> recentStations = mStorage.getRecentlyStations();
-        if (!recentStations.isEmpty()) {
-            mView.showRecentlyStation(recentStations);
-        } else {
-            mView.showMock();
-        }
+        mStorageData.getRecentlyStations();
+    }
 
+    @Override
+    public void showRecentlyStation(List<RecentStation> recentStations) {
+        mView.showRecentlyStation(recentStations);
+    }
+
+    @Override
+    public void showMock() {
+        mView.showMock();
     }
 }

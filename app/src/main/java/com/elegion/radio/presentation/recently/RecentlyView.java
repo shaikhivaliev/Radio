@@ -7,5 +7,6 @@ import java.util.List;
 public interface RecentlyView {
 
     void showRecentlyStation(List<RecentStation> recentStations);
+
     void showMock();
 }

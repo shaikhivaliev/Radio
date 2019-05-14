@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +16,6 @@ import com.elegion.radio.OnChangeFragment;
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
 import com.elegion.radio.entity.FavoriteStation;
-import com.elegion.radio.model.storage.Storage;
 import com.elegion.radio.presentation.favorites.FavoritesPresenter;
 import com.elegion.radio.presentation.favorites.FavoritesView;
 import com.elegion.radio.ui.player.PlayerFragment;
@@ -34,14 +32,12 @@ public class FavoritesFragment extends Fragment implements
     private TextView mFavoritesMock;
 
     private OnChangeFragment mChangeFragment;
-    private Storage mStorage;
     private FavoritesPresenter mPresenter;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         mChangeFragment = (OnChangeFragment) context;
-        mStorage = context instanceof Storage.StorageOwner ? ((Storage.StorageOwner) context).obtainStorage() : null;
     }
 
     @Nullable
@@ -62,7 +58,7 @@ public class FavoritesFragment extends Fragment implements
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setAdapter(mAdapter);
 
-        mPresenter = new FavoritesPresenter(this, mStorage);
+        mPresenter = new FavoritesPresenter(this);
         mPresenter.getFavoritesStation();
 
     }

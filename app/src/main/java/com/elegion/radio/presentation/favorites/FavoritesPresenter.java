@@ -1,33 +1,36 @@
 package com.elegion.radio.presentation.favorites;
 
 import android.annotation.SuppressLint;
-import android.util.Log;
 
+import com.elegion.radio.AppDelegate;
 import com.elegion.radio.entity.FavoriteStation;
-import com.elegion.radio.model.storage.Storage;
-import com.elegion.radio.ui.favorites.FavoritesFragment;
+import com.elegion.radio.model.storage.StorageCallback;
+import com.elegion.radio.model.storage.StorageData;
 
 import java.util.List;
 
-public class FavoritesPresenter {
+public class FavoritesPresenter implements StorageCallback.Favorites {
 
     private FavoritesView mView;
-    private Storage mStorage;
+    private StorageData mStorageData = new StorageData();
 
-
-    public FavoritesPresenter(FavoritesView view, Storage storage) {
+    public FavoritesPresenter(FavoritesView view) {
         mView = view;
-        mStorage = storage;
+        mStorageData.setFavoritesCallback(this);
     }
 
     @SuppressLint("CheckResult")
     public void getFavoritesStation() {
-        List<FavoriteStation> favoriteStations = mStorage.getFavoritesStation();
-        if (!favoriteStations.isEmpty()) {
-            mView.showFavoritesStation(favoriteStations);
-        } else {
-            mView.showMock();
-        }
+        mStorageData.getFavoritesStation();
     }
 
+    @Override
+    public void showFavoritesStation(List<FavoriteStation> favoriteStations) {
+        mView.showFavoritesStation(favoriteStations);
+    }
+
+    @Override
+    public void showMock() {
+        mView.showMock();
+    }
 }

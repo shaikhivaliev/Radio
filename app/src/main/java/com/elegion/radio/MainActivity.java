@@ -18,14 +18,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.elegion.radio.model.storage.Storage;
+import com.elegion.radio.model.storage.StorageData;
 import com.elegion.radio.ui.MainFragment;
 import com.elegion.radio.ui.SettingsFragment;
 import com.elegion.radio.ui.stations.StationsFragment;
 
 public class MainActivity extends AppCompatActivity implements
-        OnChangeFragment,
-        Storage.StorageOwner {
+        OnChangeFragment {
 
     private NavigationView mNavigationView;
     private DrawerLayout mDrawerLayout;
@@ -167,8 +166,4 @@ public class MainActivity extends AppCompatActivity implements
         changeFragment(fragment);
     }
 
-    @Override
-    public Storage obtainStorage() {
-        return AppDelegate.getInstance().getStorage();
-    }
 }

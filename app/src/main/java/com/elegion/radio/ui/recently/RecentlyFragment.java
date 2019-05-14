@@ -1,5 +1,7 @@
 package com.elegion.radio.ui.recently;
 
+import android.annotation.SuppressLint;
+import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,17 +14,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.elegion.radio.OnChangeFragment;
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
 import com.elegion.radio.entity.RecentStation;
-import com.elegion.radio.model.storage.Storage;
 import com.elegion.radio.presentation.recently.RecentlyPresenter;
 import com.elegion.radio.presentation.recently.RecentlyView;
 import com.elegion.radio.ui.player.PlayerFragment;
 
 import java.util.List;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 public class RecentlyFragment extends Fragment implements
         OnItemClickListener,
@@ -36,7 +41,6 @@ public class RecentlyFragment extends Fragment implements
     private RecentlyAdapter mAdapter;
 
     private OnChangeFragment mChangeFragment;
-    private Storage mStorage;
     private RecentlyPresenter mPresenter;
 
 
@@ -44,7 +48,6 @@ public class RecentlyFragment extends Fragment implements
     public void onAttach(Context context) {
         super.onAttach(context);
         mChangeFragment = (OnChangeFragment) context;
-        mStorage = context instanceof Storage.StorageOwner ? ((Storage.StorageOwner) context).obtainStorage() : null;
     }
 
     @Nullable
@@ -76,10 +79,10 @@ public class RecentlyFragment extends Fragment implements
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mPresenter = new RecentlyPresenter(this, mStorage);
+        mPresenter = new RecentlyPresenter(this);
         mPresenter.getRecentlyStations();
-
     }
+
 
     @Override
     public void onItemClick(String id) {

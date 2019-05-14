@@ -13,21 +13,25 @@ import android.util.Log;
 import com.elegion.radio.AppDelegate;
 import com.elegion.radio.entity.FavoriteStation;
 import com.elegion.radio.entity.RecentStation;
+import com.elegion.radio.entity.Station;
 import com.elegion.radio.model.server.ApiUtils;
-import com.elegion.radio.model.storage.Storage;
+import com.elegion.radio.model.storage.StorageCallback;
+import com.elegion.radio.model.storage.StorageData;
 import com.elegion.radio.service.AudioPlayerService;
 
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 
-public class PlayerPresenter {
+public class PlayerPresenter implements StorageCallback.FavoritesImage {
 
     private static final String SERVICE_PRESENTER = "SERVICE_PRESENTER";
 
     private PlayerView mView;
-    private Storage mStorage;
+    private StorageData mStorageData = new StorageData();
 
     private RecentStation mRecentStation;
     private FavoriteStation mFavoriteStation;
@@ -36,9 +40,9 @@ public class PlayerPresenter {
     private AudioPlayerService.AudioPlayerBinder mBinder;
     private MediaControllerCompat mMediaController;
 
-    public PlayerPresenter(PlayerView view, Storage storage) {
+    public PlayerPresenter(PlayerView view) {
         mView = view;
-        mStorage = storage;
+        mStorageData.setFavoritesImageCallback(this);
     }
 
     public void startAudioService(String stationStreamUrl) {
@@ -54,7 +58,6 @@ public class PlayerPresenter {
                     mMediaController = new MediaControllerCompat(AppDelegate.getInstance(), mBinder.getMediaSessionToken());
                     mMediaController.registerCallback(mMediaCallback);
                     mMediaCallback.onPlaybackStateChanged(mMediaController.getPlaybackState());
-
 
                 } catch (RemoteException e) {
                     mMediaController = null;
@@ -129,15 +132,15 @@ public class PlayerPresenter {
                 .getStationById(String.valueOf(stationId))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doFinally(() -> mStorage.addToRecent(stationId, getRecentStation()))
-                .subscribe(station -> {
+                .doOnSuccess(station -> mStorageData.addToRecent(stationId, getRecentStation()))
+                .subscribe(
+                        station -> {
                             mView.showStation(station);
                             mRecentStation = new RecentStation(0, Integer.valueOf(stationId), station.getName(), station.getImage().getUrl(), station.getCategoriesBean().get(0).getTitle());
                             mFavoriteStation = new FavoriteStation(Integer.valueOf(stationId), station.getName(), station.getImage().getUrl(), station.getCategoriesBean().get(0).getTitle());
-
                         },
-                        throwable -> mView.showError());
-
+                        throwable -> mView.showError()
+                );
     }
 
 
@@ -149,16 +152,26 @@ public class PlayerPresenter {
         return mRecentStation;
     }
 
-    public boolean isAddedInDatabase(String stationId) {
-        return mStorage.isAddedInDatabase(stationId);
+    public void isAddedInDatabase(String stationId) {
+        mStorageData.isAddedInFavorites(stationId);
     }
 
     public void insertStationToFavorites() {
-        mStorage.insertStationToFavorites(getFavoriteStation());
+        mStorageData.insertStationToFavorites(getFavoriteStation());
     }
 
     public void deleteStationFromFavorites(String stationId) {
-        mStorage.deleteStationFromFavorites(stationId);
+        mStorageData.deleteStationFromFavorites(stationId);
     }
 
+
+    @Override
+    public void showFavoritesImage() {
+        mView.showFavoritesImage();
+    }
+
+    @Override
+    public void showFavoritesImageMock() {
+        mView.showFavoritesImageMock();
+    }
 }

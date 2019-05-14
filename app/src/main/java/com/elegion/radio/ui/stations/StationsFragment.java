@@ -15,6 +15,8 @@ import com.elegion.radio.OnChangeFragment;
 import com.elegion.radio.OnItemClickListener;
 import com.elegion.radio.R;
 import com.elegion.radio.entity.Station;
+import com.elegion.radio.model.server.ServerData;
+import com.elegion.radio.model.storage.StorageData;
 import com.elegion.radio.presentation.stations.StationsPresenter;
 import com.elegion.radio.presentation.stations.StationsView;
 import com.elegion.radio.ui.player.PlayerFragment;
@@ -42,7 +44,6 @@ public class StationsFragment extends Fragment implements
     private OnChangeFragment mChangeFragment;
     private StationsPresenter mPresenter;
 
-
     public static StationsFragment newInstance(Bundle args) {
         StationsFragment fragment = new StationsFragment();
         fragment.setArguments(args);
@@ -59,7 +60,6 @@ public class StationsFragment extends Fragment implements
             mStyleCode = getArguments().getString(STYLE_CODE_KEY);
             mSearchQuery = getArguments().getString(SEARCH_QUERY);
         }
-
     }
 
     @Nullable
@@ -111,4 +111,6 @@ public class StationsFragment extends Fragment implements
         mRecyclerView.setVisibility(View.GONE);
         mErrorView.setVisibility(View.VISIBLE);
     }
+
+
 }

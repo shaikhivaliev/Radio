@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 import com.elegion.radio.R;
 import com.elegion.radio.entity.Station;
-import com.elegion.radio.model.storage.Storage;
+import com.elegion.radio.model.storage.StorageData;
 import com.elegion.radio.presentation.player.PlayerPresenter;
 import com.elegion.radio.presentation.player.PlayerView;
 import com.squareup.picasso.Picasso;
@@ -41,7 +41,6 @@ public class PlayerFragment extends Fragment implements
     private String mStyle;
     private ImageButton mPlayPauseButton;
 
-    private Storage mStorage;
     private PlayerPresenter mPresenter;
 
 
@@ -54,7 +53,6 @@ public class PlayerFragment extends Fragment implements
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mStorage = context instanceof Storage.StorageOwner ? ((Storage.StorageOwner) context).obtainStorage() : null;
     }
 
     View.OnClickListener playButtonListener = new View.OnClickListener() {
@@ -100,11 +98,9 @@ public class PlayerFragment extends Fragment implements
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (getArguments() != null) {
             mStationId = getArguments().getString(STATION_KEY);
         }
-
     }
 
 
@@ -130,25 +126,12 @@ public class PlayerFragment extends Fragment implements
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mPresenter = new PlayerPresenter(this, mStorage);
-        isAddedInDatabase();
+        mPresenter = new PlayerPresenter(this);
+        mPresenter.isAddedInDatabase(mStationId);
         Log.d(SERVICE_FRAGMENT, "Запрос к API, поиск станции по id - " + mStationId);
         mPresenter.getStation(mStationId);
 
     }
-
-
-    @Override
-    public void isAddedInDatabase() {
-        if (mPresenter.isAddedInDatabase(mStationId)) {
-            mAddToFavorites.setImageResource(R.drawable.ic_star_filling);
-            mAddToFavorites.setOnClickListener(removeFromFavorites);
-        } else {
-            mAddToFavorites.setImageResource(R.drawable.ic_star);
-            mAddToFavorites.setOnClickListener(addToFavorites);
-        }
-    }
-
 
     @Override
     public void showPlayButton() {
@@ -186,6 +169,18 @@ public class PlayerFragment extends Fragment implements
     public void showError() {
         mErrorView.setVisibility(View.VISIBLE);
         mPlayerView.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void showFavoritesImage() {
+        mAddToFavorites.setImageResource(R.drawable.ic_star_filling);
+        mAddToFavorites.setOnClickListener(removeFromFavorites);
+    }
+
+    @Override
+    public void showFavoritesImageMock() {
+        mAddToFavorites.setImageResource(R.drawable.ic_star);
+        mAddToFavorites.setOnClickListener(addToFavorites);
     }
 
     @Override

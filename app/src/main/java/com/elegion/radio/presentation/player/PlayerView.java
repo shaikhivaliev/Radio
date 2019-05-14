@@ -15,6 +15,8 @@ public interface PlayerView {
 
     void showError();
 
-    void isAddedInDatabase();
+    void showFavoritesImage();
+
+    void showFavoritesImageMock();
 
 }
